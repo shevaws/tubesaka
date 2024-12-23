@@ -1,94 +1,108 @@
-package main
+import random
+import time
+import matplotlib.pyplot as plt
+import numpy as np
 
-import (
-	"fmt"
-	"math/rand"
-	"sort"
-	"time"
-)
+# Recursive Binary Search
+def recursive_binary_search(arr, low, high, target):
+    if low > high:
+        return -1
+    mid = (low + high) // 2
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        return recursive_binary_search(arr, mid + 1, high, target)
+    else:
+        return recursive_binary_search(arr, low, mid - 1, target)
 
-// Recursive Binary Search
-func recursiveBinarySearch(arr []int, low, high, target int) int {
-	if low > high {
-		return -1
-	}
-	mid := (low + high) / 2
-	if arr[mid] == target {
-		return mid
-	} else if arr[mid] < target {
-		return recursiveBinarySearch(arr, mid+1, high, target)
-	} else {
-		return recursiveBinarySearch(arr, low, mid-1, target)
-	}
-}
+# Iterative Binary Search
+def iterative_binary_search(arr, target):
+    low, high = 0, len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
 
-// Iterative Binary Search
-func iterativeBinarySearch(arr []int, target int) int {
-	low, high := 0, len(arr)-1
-	for low <= high {
-		mid := (low + high) / 2
-		if arr[mid] == target {
-			return mid
-		} else if arr[mid] < target {
-			low = mid + 1
-		} else {
-			high = mid - 1
-		}
-	}
-	return -1
-}
+# Generate Random Array
+def generate_array(size, sorted_array):
+    array = [random.randint(0, 1000) for _ in range(size)]
+    if sorted_array:
+        array.sort()
+    return array
 
-// Generate Random Array
-func generateArray(size int, sortedArray bool) []int {
-	array := make([]int, size)
-	for i := range array {
-		array[i] = rand.Intn(1000)
-	}
-	if sortedArray {
-		sort.Ints(array)
-	}
-	return array
-}
+# Measure Execution Time for Recursive
+def measure_recursive_time(array, target, sorted_array):
+    if not sorted_array:
+        array.sort()
+    start = time.time()
+    recursive_binary_search(array, 0, len(array) - 1, target)
+    return time.time() - start
 
-// Measure Execution Time for Recursive
-func measureRecursiveTime(array []int, target int, sorted bool) float64 {
-	if !sorted {
-		sort.Ints(array)
-	}
-	start := time.Now()
-	recursiveBinarySearch(array, 0, len(array)-1, target)
-	return time.Since(start).Seconds()
-}
+# Measure Execution Time for Iterative
+def measure_iterative_time(array, target, sorted_array):
+    if not sorted_array:
+        array.sort()
+    start = time.time()
+    iterative_binary_search(array, target)
+    return time.time() - start
 
-// Measure Execution Time for Iterative
-func measureIterativeTime(array []int, target int, sorted bool) float64 {
-	if !sorted {
-		sort.Ints(array)
-	}
-	start := time.Now()
-	iterativeBinarySearch(array, target)
-	return time.Since(start).Seconds()
-}
+# Plot Graph
+def plot_graph(sizes, recursive_sorted, recursive_unsorted, iterative_sorted, iterative_unsorted):
+    sizes = np.array(sizes)
+    plt.figure(figsize=(10, 6))
 
-// Main Program
-func main() {
-	sizes := []int{100, 500, 1000, 5000, 10000}
-	fmt.Printf("%-10s %-20s %-20s %-20s %-20s\n", "Size", "Recursive Sorted", "Recursive Unsorted", "Iterative Sorted", "Iterative Unsorted")
+    # Recursive Sorted
+    plt.plot(sizes, recursive_sorted, label="Recursive Sorted", marker="o")
+    # Recursive Unsorted
+    plt.plot(sizes, recursive_unsorted, label="Recursive Unsorted", marker="o", linestyle="--")
+    # Iterative Sorted
+    plt.plot(sizes, iterative_sorted, label="Iterative Sorted", marker="s")
+    # Iterative Unsorted
+    plt.plot(sizes, iterative_unsorted, label="Iterative Unsorted", marker="s", linestyle="--")
 
-	for _, size := range sizes {
-		array := generateArray(size, false)
-		target := array[rand.Intn(len(array))]
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.title("Performance Comparison: Recursive vs Iterative (Sorted and Unsorted)")
+    plt.xlabel("Size")
+    plt.ylabel("Time (s)")
+    plt.legend()
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+    plt.savefig("comparison.png")
+    plt.show()
 
-		// Measure Recursive Times
-		recursiveSortedTime := measureRecursiveTime(generateArray(size, true), target, true)
-		recursiveUnsortedTime := measureRecursiveTime(array, target, false)
+# Main
+if __name__ == "__main__":
+    sizes = [100, 500, 1000, 5000, 10000]
+    print(f"{'Size':<10} {'Recursive Sorted':<20} {'Recursive Unsorted':<20} {'Iterative Sorted':<20} {'Iterative Unsorted':<20}")
 
-		// Measure Iterative Times
-		iterativeSortedTime := measureIterativeTime(generateArray(size, true), target, true)
-		iterativeUnsortedTime := measureIterativeTime(array, target, false)
+    recursive_sorted = []
+    recursive_unsorted = []
+    iterative_sorted = []
+    iterative_unsorted = []
 
-		// Display Results
-		fmt.Printf("%-10d %-20.10f %-20.10f %-20.10f %-20.10f\n",
-			size, recursiveSortedTime, recursiveUnsortedTime, iterativeSortedTime, iterativeUnsortedTime)
-	}
-}
+    for size in sizes:
+        array = generate_array(size, False)
+        target = array[random.randint(0, len(array) - 1)]
+
+        # Measure Recursive Times
+        rs_time = measure_recursive_time(generate_array(size, True), target, True)
+        ru_time = measure_recursive_time(array, target, False)
+        recursive_sorted.append(rs_time)
+        recursive_unsorted.append(ru_time)
+
+        # Measure Iterative Times
+        is_time = measure_iterative_time(generate_array(size, True), target, True)
+        iu_time = measure_iterative_time(array, target, False)
+        iterative_sorted.append(is_time)
+        iterative_unsorted.append(iu_time)
+
+        # Display Results
+        print(f"{size:<10} {rs_time:<20.10f} {ru_time:<20.10f} {is_time:<20.10f} {iu_time:<20.10f}")
+
+    # Generate Graph
+    plot_graph(sizes, recursive_sorted, recursive_unsorted, iterative_sorted, iterative_unsorted)
